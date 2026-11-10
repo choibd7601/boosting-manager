@@ -54,7 +54,17 @@ button{cursor:pointer}
 .stats .warn b{color:var(--warn)}
 
 /* 보드: 넓은 화면에서는 5×2 = 10칸이 한 화면에 균등하게 */
-.board{flex:1;min-height:0;display:grid;gap:10px;padding:0 16px 16px;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.board{--cols:5;--rows:2;flex:1;min-height:0;overflow:auto;display:grid;gap:10px;padding:0 16px 16px;grid-template-columns:repeat(var(--cols),minmax(0,1fr));grid-template-rows:repeat(var(--rows),minmax(0,1fr))}
+.board.full{grid-template-rows:none;grid-auto-rows:minmax(360px,auto)}
+.board.dense .c-head{padding:6px 8px}
+.board.dense .c-pay{padding:6px;gap:4px}
+.board.dense .dday{font-size:18px}
+.board.dense .c-foot{display:none}
+.board.dense .c-add{padding:4px}
+.view{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-left:auto;font-size:13px;color:var(--muted)}
+.view select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.view label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.view input{accent-color:var(--accent)}
 @media (max-width:1300px){.board{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(380px,auto)}}
 @media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.board{grid-template-columns:1fr}.search{width:100%}.top .grow{display:none}}
@@ -133,6 +143,18 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 <div class="sub">
   <nav class="pages" id="pages" aria-label="보드 페이지"></nav>
   <div class="stats" id="stats"></div>
+  <div class="view">
+    <label>한 화면에
+      <select id="perPage" aria-label="한 화면에 보이는 고객 수">
+        <option value="4">4명</option><option value="6">6명</option><option value="8">8명</option>
+        <option value="10">10명</option><option value="12">12명</option><option value="15">15명</option><option value="20">20명</option>
+      </select></label>
+    <div class="seg" role="group" aria-label="보기 방식">
+      <button class="a" data-view="page">페이지 보기</button>
+      <button class="a" data-view="full">전체 보기</button>
+    </div>
+    <label id="autoWrap"><input type="checkbox" id="auto"> 자동 넘김 <select id="autoSec" aria-label="넘김 간격"><option value="10">10초</option><option value="20">20초</option><option value="30">30초</option><option value="60">60초</option></select></label>
+  </div>
 </div>
 
 <main class="board" id="board"></main>
@@ -172,8 +194,13 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 "use strict";
-const PER_PAGE = 10;
-const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift";
+const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift", LS_VIEW = "gobap-view";
+// 한 화면 고객 수 → 가로 × 세로 칸
+const LAYOUTS = { 4:[2,2], 6:[3,2], 8:[4,2], 10:[5,2], 12:[4,3], 15:[5,3], 20:[5,4] };
+let view = { per:10, mode:"page", auto:false, sec:20 };
+try { Object.assign(view, JSON.parse(localStorage.getItem(LS_VIEW) || "{}")); } catch(e) {}
+if (!LAYOUTS[view.per]) view.per = 10;
+let PER_PAGE = view.per;
 
 let customers = [];
 let mode = "local";       // "server" = 모든 근무자 공유, "local" = 이 기기에만 저장
@@ -312,9 +339,10 @@ function filtered(){
 
 function render(){
   const s = activeShift();
-  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.shift === s));
+  document.querySelectorAll("[data-shift]").forEach(b => b.setAttribute("aria-pressed", b.dataset.shift === s));
 
   const list = filtered();
+  PER_PAGE = view.mode === "full" ? Math.max(1, list.length) : view.per;
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
   if (page >= pages) page = pages - 1;
 
@@ -341,6 +369,16 @@ function render(){
   );
 
   const board = $("#board"); board.replaceChildren();
+  const [cols, rows] = LAYOUTS[view.per];
+  board.style.setProperty("--cols", cols);
+  board.style.setProperty("--rows", rows);
+  board.classList.toggle("full", view.mode === "full");
+  board.classList.toggle("dense", view.mode === "page" && rows >= 3);
+  $("#pages").classList.toggle("hidden", view.mode === "full");
+  $("#perPage").value = view.per;
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === view.mode));
+  $("#autoWrap").classList.toggle("hidden", view.mode === "full");
+  $("#auto").checked = view.auto; $("#autoSec").value = view.sec;
   list.slice(page*PER_PAGE, (page+1)*PER_PAGE).forEach(c => board.append(card(c, s)));
 }
 
@@ -446,7 +484,7 @@ $("#q").addEventListener("input", () => { page = 0; render(); });
 
 /* ---------- 근무 전환 ---------- */
 shift = ls.get(LS_SHIFT) || "auto";
-document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+document.querySelectorAll("[data-shift]").forEach(b => b.addEventListener("click", () => {
   shift = b.dataset.shift === currentShift() ? "auto" : b.dataset.shift;
   ls.set(LS_SHIFT, shift); render();
 }));
@@ -457,6 +495,32 @@ function tick(){
 }
 let lastDay = workDay();
 tick(); setInterval(() => { tick(); const now = workDay(); if (now !== lastDay) { lastDay = now; render(); } }, 30000);
+
+/* ---------- 보기 설정 ---------- */
+function saveView(){ ls.set(LS_VIEW, JSON.stringify(view)); }
+$("#perPage").addEventListener("change", e => {
+  const first = page * PER_PAGE;            // 보던 고객이 그대로 보이도록
+  view.per = +e.target.value; saveView();
+  page = Math.floor(first / view.per); render();
+});
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+  view.mode = b.dataset.view; saveView(); page = 0; render();
+}));
+let autoTimer = null;
+function setAuto(){
+  clearInterval(autoTimer);
+  if (!view.auto || view.mode !== "page") return;
+  autoTimer = setInterval(() => {
+    const a = document.activeElement;
+    if ($("#dlg").open || (a && (a.tagName === "INPUT" && a.type !== "checkbox" || a.tagName === "TEXTAREA"))) return;
+    const pages = Math.max(1, Math.ceil(filtered().length / view.per));
+    page = (page + 1) % pages; render();
+  }, view.sec * 1000);
+}
+$("#auto").addEventListener("change", e => { view.auto = e.target.checked; saveView(); setAuto(); });
+$("#autoSec").addEventListener("change", e => { view.sec = +e.target.value; saveView(); setAuto(); });
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", setAuto));
+setAuto();
 
 load();
 </script>
