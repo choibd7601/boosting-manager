@@ -158,6 +158,21 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 .n-acts button.on{border-color:var(--ok);color:var(--ok)}
 .n-acts .reads{flex:1;min-width:0}
 .n-empty{color:var(--muted);font-size:13px;padding:6px 0}
+.attach-btn{border:1px dashed var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:13px;color:var(--muted)}
+.attach-btn:hover{border-color:var(--accent);color:var(--text)}
+.pending{display:flex;flex-wrap:wrap;gap:6px}
+.pending:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:12px}
+.chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:220px}
+.chip button{border:0;background:transparent;color:var(--muted);padding:0;font-size:14px;line-height:1}
+.chip.err{border-color:var(--bad);color:var(--bad)}
+.files{display:grid;gap:6px}
+.files .imgs{display:flex;flex-wrap:wrap;gap:6px}
+.files .imgs a{display:block;width:96px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.files .imgs img{width:100%;height:100%;object-fit:cover;display:block}
+.files .doc{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);text-decoration:none;overflow-wrap:anywhere}
+.files .doc small{color:var(--muted)}
+.attach-note{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -204,9 +219,11 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <label class="d-me">내 이름 <input id="me" placeholder="글쓴이·확인자로 표시돼요" maxlength="20"></label>
   <form class="compose" id="compose">
     <textarea id="noteText" placeholder="다음 근무자에게 전달할 내용이나 공지를 적어주세요" maxlength="1000"></textarea>
+    <div class="pending" id="pending"></div>
     <div class="row2">
       <select id="noteType" aria-label="글 종류"><option value="handover">전달사항</option><option value="notice">공지</option></select>
       <label><input type="checkbox" id="notePin"> 위에 고정</label>
+      <label class="attach-btn">파일 첨부<input type="file" id="noteFiles" multiple hidden></label>
       <button class="btn primary" type="submit">등록</button>
     </div>
   </form>
@@ -602,6 +619,9 @@ async function saveNote(n){
 }
 async function deleteNote(n){
   notes = notes.filter(x => x.id !== n.id);
+  if (mode === "server") for (const f of n.files || []) {
+    fetch("/api/upload?url=" + encodeURIComponent(f.url), { method:"DELETE", headers:{ "x-board-key": key } }).catch(() => {});
+  }
   if (mode === "local") ls.set(LS_NOTES, JSON.stringify(notes));
   else { try { await api("DELETE", null, "id=" + encodeURIComponent(n.id), "notes"); } catch(e){ setSync("삭제 실패", "err"); } }
   renderNotes();
@@ -615,7 +635,7 @@ function renderNotes(){
   const pinned = notes.filter(n => n.pinned).sort((a,b) => b.at - a.at);
   const bar = $("#pinbar");
   bar.classList.toggle("hidden", !pinned.length);
-  if (pinned.length) bar.replaceChildren(el("b", null, "고정"), el("span", null, pinned[0].text.split("\n")[0]),
+  if (pinned.length) bar.replaceChildren(el("b", null, "고정"), el("span", null, (pinned[0].text || "📎 첨부파일").split("\n")[0]),
     el("small", null, pinned.length > 1 ? `외 ${pinned.length-1}건` : `${pinned[0].author || ""} · ${fmt(pinned[0].at)}`));
 
   document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab));
@@ -632,7 +652,8 @@ function renderNotes(){
         n.shift ? el("span", { class:"tag " + n.shift }, n.shift === "day" ? "낮" : "밤") : null,
         el("span", null, `${n.author || "이름 없음"} · ${fmt(n.at)}`),
         n.pinned ? el("span", { style:"color:var(--bad)" }, "· 고정") : null),
-      el("div", { class:"n-text" }, n.text),
+      n.text ? el("div", { class:"n-text" }, n.text) : null,
+      filesView(n.files),
       el("div", { class:"n-acts" },
         el("span", { class:"reads" }, reads.length ? "확인: " + reads.join(", ") : "아직 확인한 사람 없음"),
         el("button", { class: iRead ? "on" : "", type:"button", onclick: () => {
@@ -659,14 +680,61 @@ $("#pinbar").addEventListener("click", openNotes);
 $("#closeNotes").addEventListener("click", closeNotes);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#drawer").classList.contains("hidden") && !$("#dlg").open) closeNotes(); });
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; renderNotes(); }));
-$("#compose").addEventListener("submit", e => {
+/* ---------- 첨부파일 ---------- */
+const MAX_FILE = 4 * 1024 * 1024;
+let pending = [];   // { file, status: "wait"|"up"|"done"|"err", url, msg }
+const isImg = f => /^image\//.test(f.type || "") || /\.(png|jpe?g|gif|webp)$/i.test(f.name || "");
+const kb = n => n >= 1048576 ? (n/1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n/1024)) + "KB";
+
+function filesView(files){
+  if (!files || !files.length) return null;
+  const imgs = files.filter(isImg), docs = files.filter(f => !isImg(f));
+  return el("div", { class:"files" },
+    imgs.length ? el("div", { class:"imgs" }, imgs.map(f => el("a", { href:f.url, target:"_blank", rel:"noopener", title:f.name }, el("img", { src:f.url, alt:f.name, loading:"lazy" })))) : null,
+    docs.map(f => el("a", { class:"doc", href:f.url, target:"_blank", rel:"noopener", download:f.name }, "📎 " + f.name, el("small", null, kb(f.size || 0)))));
+}
+function renderPending(){
+  $("#pending").replaceChildren(...pending.map(p => el("span", { class:"chip" + (p.status === "err" ? " err" : "") },
+    el("span", null, (p.status === "up" ? "올리는 중… " : p.status === "err" ? "실패: " : "") + p.file.name + (p.msg ? ` (${p.msg})` : "")),
+    el("button", { type:"button", "aria-label":"첨부 취소", onclick: () => { pending = pending.filter(x => x !== p); renderPending(); } }, "×"))));
+}
+$("#noteFiles").addEventListener("change", e => {
+  if (mode !== "server") { alert("파일 첨부는 버셀에서 공유 저장(비밀번호, Blob) 설정을 마친 뒤에 쓸 수 있어요."); e.target.value = ""; return; }
+  for (const f of e.target.files) pending.push(f.size > MAX_FILE ? { file:f, status:"err", msg:"4MB 초과" } : { file:f, status:"wait" });
+  e.target.value = ""; renderPending();
+});
+async function uploadOne(p){
+  p.status = "up"; renderPending();
+  try {
+    const r = await fetch("/api/upload", { method:"POST", body:p.file,
+      headers:{ "x-board-key": key, "x-filename": encodeURIComponent(p.file.name), "Content-Type": p.file.type || "application/octet-stream" } });
+    if (r.status === 501) throw new Error("버셀 Blob 미설정");
+    if (r.status === 413) throw new Error("4MB 초과");
+    if (!r.ok) throw new Error("오류 " + r.status);
+    const j = await r.json(); p.status = "done"; p.url = j.url;
+  } catch(e) { p.status = "err"; p.msg = e.message; }
+  renderPending();
+}
+
+let posting = false;
+$("#compose").addEventListener("submit", async e => {
   e.preventDefault();
-  const text = $("#noteText").value.trim(); if (!text) return;
+  if (posting) return;
+  const text = $("#noteText").value.trim();
+  const ready = pending.filter(p => p.status !== "err");
+  if (!text && !ready.length) return;
   if (!me()) { alert("위에 내 이름을 먼저 적어주세요."); $("#me").focus(); return; }
-  const n = { id: uid(), type: $("#noteType").value, text, author: me(), shift: currentShift(), at: Date.now(), pinned: $("#notePin").checked, reads: [me()] };
+  posting = true;
+  for (const p of ready) if (p.status !== "done") await uploadOne(p);
+  posting = false;
+  if (pending.some(p => p.status === "err") && !confirm("올리지 못한 파일이 있어요. 나머지만 등록할까요?")) return;
+  const files = pending.filter(p => p.status === "done").map(p => ({ url:p.url, name:p.file.name, size:p.file.size, type:p.file.type }));
+  if (!text && !files.length) return;
+  const n = { id: uid(), type: $("#noteType").value, text, files, author: me(), shift: currentShift(), at: Date.now(), pinned: $("#notePin").checked, reads: [me()] };
   notes.push(n); saveNote(n);
   seen = Math.max(seen, n.at); ls.set(LS_SEEN, String(seen));
-  $("#noteText").value = ""; $("#notePin").checked = false;
+  $("#noteText").value = ""; $("#notePin").checked = false; $("#noteType").value = "handover";
+  pending = []; renderPending();
   renderNotes();
 });
 
