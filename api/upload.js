@@ -7,7 +7,7 @@ const MAX = 4 * 1024 * 1024; // 버셀 함수 요청 한도(4.5MB) 안쪽
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  if (!TOKEN || !PASSWORD) return res.status(501).json({ error: "not_configured" });
+  if (!TOKEN || !PASSWORD) return res.status(501).json({ error: "not_configured", missing: [!TOKEN && "Blob", !PASSWORD && "BOARD_PASSWORD"].filter(Boolean) });
   if (req.headers["x-board-key"] !== PASSWORD) return res.status(401).json({ error: "wrong_password" });
   try {
     if (req.method === "POST") {

@@ -28,7 +28,10 @@ async function readBody(req) {
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (!URL_ || !TOKEN || !PASSWORD) {
-    return res.status(501).json({ error: "not_configured" });
+    const missing = [];
+    if (!URL_ || !TOKEN) missing.push("Redis");
+    if (!PASSWORD) missing.push("BOARD_PASSWORD");
+    return res.status(501).json({ error: "not_configured", missing });
   }
   if (req.headers["x-board-key"] !== PASSWORD) {
     return res.status(401).json({ error: "wrong_password" });

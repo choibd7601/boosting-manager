@@ -340,7 +340,10 @@ async function api(method, body, qs="", kind="board"){
     body: body ? JSON.stringify(body) : undefined
   });
   if (r.status === 401) throw Object.assign(new Error("auth"), {code:401});
-  if (r.status === 501 || r.status === 404) throw Object.assign(new Error("noserver"), {code:501});
+  if (r.status === 501 || r.status === 404) {
+    let missing = []; try { missing = (await r.json()).missing || []; } catch(_) {}
+    throw Object.assign(new Error("noserver"), {code:501, missing});
+  }
   if (!r.ok) throw new Error("http " + r.status);
   return r.json();
 }
@@ -361,7 +364,7 @@ async function load(){
     mode = "local";
     try { customers = JSON.parse(ls.get(LS_DATA) || "null") || seed(); } catch(_) { customers = seed(); }
     try { notes = JSON.parse(ls.get(LS_NOTES) || "[]"); } catch(_) { notes = []; }
-    setSync("● 이 기기에만 저장 중", "local");
+    setSync("● 이 기기에만 저장 중" + (e.missing && e.missing.length ? " · 버셀 설정 필요: " + e.missing.join(", ") : ""), "local");
   }
   render(); renderNotes();
 }
@@ -708,7 +711,7 @@ async function uploadOne(p){
   try {
     const r = await fetch("/api/upload", { method:"POST", body:p.file,
       headers:{ "x-board-key": key, "x-filename": encodeURIComponent(p.file.name), "Content-Type": p.file.type || "application/octet-stream" } });
-    if (r.status === 501) throw new Error("버셀 Blob 미설정");
+    if (r.status === 501) throw new Error("버셀 Blob 연결 필요");
     if (r.status === 413) throw new Error("4MB 초과");
     if (!r.ok) throw new Error("오류 " + r.status);
     const j = await r.json(); p.status = "done"; p.url = j.url;
