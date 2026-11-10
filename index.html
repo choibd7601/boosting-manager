@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>하노이 육성관리</title>
+<meta name="description" content="매일 숙제, 이벤트, 시즌 콘텐츠까지. 베트남 전담팀이 내 계정을 매일 관리해드립니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 콘셉트: 매일 체크되는 관리 일지. 대리육성(한 번에 키우기)과 달리, 육성관리는 매일 꾸준히 계정을 돌봐주는 월 관리형 서비스 */
+:root{
+  --night:#0c1320;
+  --panel:#131d2e;
+  --line:#22304a;
+  --text:#e8edf5;
+  --muted:#93a0b6;
+  --sky:#4fb3ff;        /* 포인트: 관리/체크 */
+  --lantern:#ff5b3a;    /* 강조: 대리육성 사이트와 같은 등불색 */
+  --kakao:#fee500; --kakao-ink:#191600;
+  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--night);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.65;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px}
+.logo{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;text-decoration:none}
+.logo span{color:var(--sky)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;font-weight:700;text-decoration:none;cursor:pointer;border:0;font-family:var(--f-body);transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-kakao{background:var(--kakao);color:var(--kakao-ink)}
+.btn-sm{padding:9px 14px;font-size:14px}
+.btn-lg{padding:16px 26px;font-size:18px}
+.kakao-ico{width:20px;height:20px;flex:none}
+
+/* hero */
+.hero .wrap{padding-block:28px 48px;display:grid;gap:28px;grid-template-columns:1.2fr 1fr;align-items:center}
+@media (max-width:820px){.hero .wrap{grid-template-columns:1fr}}
+.hero-copy{display:grid;gap:20px;min-width:0}
+.hero h1{font-size:clamp(38px,7vw,76px);letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--sky)}
+.hero .lede{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:34em}
+.hero .lede strong{color:var(--text)}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.cta-note{font-size:14px;color:var(--muted)}
+
+/* 오늘의 관리 일지 카드 */
+.log{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:14px;min-width:0}
+.log-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.log-head b{color:var(--text);font-weight:500}
+.log ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.log li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--night);border:1px solid var(--line)}
+.log li .chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:13px;font-style:normal;font-weight:700;color:var(--night)}
+.log li.done .chk{background:var(--sky);border-color:var(--sky)}
+.log li.done span{color:var(--muted);text-decoration:line-through}
+.log li time{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.log .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.log .bar i{display:block;height:100%;width:80%;background:var(--sky);border-radius:99px}
+.log .foot{font-size:13px;color:var(--muted)}
+
+section.band .wrap{padding-block:56px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--sky);margin-bottom:10px}
+.band h2{font-size:clamp(28px,4.4vw,44px);margin-bottom:28px}
+.band.alt{background:var(--panel);border-block:1px solid var(--line)}
+
+/* 대리육성 vs 육성관리 */
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.compare div{padding:24px;border-radius:16px;border:1px solid var(--line);background:var(--night);display:grid;gap:10px;align-content:start;min-width:0}
+.compare div.me{border-color:var(--sky)}
+.compare .k{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.compare div.me .k{color:var(--sky)}
+.compare h3{font-size:24px}
+.compare p{color:var(--muted)}
+.compare a{color:var(--text)}
+
+.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
+.items div{min-width:0;display:grid;gap:8px;align-content:start}
+.items .big{font-family:var(--f-display);font-size:40px;color:var(--sky);line-height:1}
+.items h3{font-size:21px}
+.items p{color:var(--muted)}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;counter-reset:s}
+.steps li{counter-increment:s;padding:20px;border:1px solid var(--line);border-radius:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.steps li::before{content:"STEP " counter(s);font-family:var(--f-mono);font-size:12px;color:var(--sky)}
+.steps b{font-size:18px}
+.steps span{color:var(--muted);font-size:15px}
+
+.prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.plan{padding:24px;border-radius:16px;background:var(--night);border:1px solid var(--line);display:grid;gap:14px;align-content:start;position:relative}
+.plan.best{border-color:var(--sky)}
+.plan .tag{position:absolute;top:-12px;right:18px;background:var(--sky);color:var(--night);font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px}
+.plan h3{font-size:24px}
+.plan .won{font-family:var(--f-display);font-size:40px;line-height:1}
+.plan .won small{font-family:var(--f-body);font-size:15px;color:var(--muted)}
+.plan ul{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:4px}
+.price-note{margin-top:18px;font-size:14px;color:var(--muted)}
+.sample{display:inline-block;font-family:var(--f-mono);font-size:11px;color:var(--lantern);border:1px solid var(--lantern);border-radius:4px;padding:1px 6px;margin-left:8px;vertical-align:middle}
+
+.faq{display:grid;gap:10px;max-width:760px}
+.faq details{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.faq summary{cursor:pointer;font-weight:700}
+.faq p{margin-top:10px;color:var(--muted)}
+
+.final .wrap{padding-block:64px;text-align:center;display:grid;gap:18px;justify-items:center}
+.final h2{font-size:clamp(30px,5vw,52px)}
+.final p{color:var(--muted)}
+footer .wrap{padding-block:28px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(12,19,32,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dock .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.dock p{font-size:14px;color:var(--muted);min-width:0}
+.dock p b{color:var(--text)}
+@media (max-width:520px){.dock p{display:none}.dock .btn{flex:1}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top">하노이<span>육성관리</span></a>
+    <a class="btn btn-kakao btn-sm" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
+      <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
+      카톡 상담
+    </a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1>매일 숙제,<br>이제 <em>맡기고</em> 쉬세요</h1>
+        <p class="lede">일일 퀘스트, 출석, 이벤트, 시즌 콘텐츠까지. 하노이 전담 매니저가 <strong>매일 정해진 시간에</strong> 내 계정을 챙겨드립니다. 바쁜 날에도 계정은 멈추지 않습니다.</p>
+        <div class="cta-row">
+          <a class="btn btn-kakao btn-lg" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
+            <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
+            카카오톡으로 관리 상담
+          </a>
+          <span class="cta-note">평균 응답 10분 · 월 단위로 편하게</span>
+        </div>
+      </div>
+
+      <div class="log" aria-label="관리 일지 예시">
+        <div class="log-head"><span>오늘의 관리 일지</span><b id="today">--.-- (-)</b></div>
+        <ul>
+          <li class="done"><i class="chk">✓</i><span>출석 · 우편함 수령</span><time>09:10</time></li>
+          <li class="done"><i class="chk">✓</i><span>일일 퀘스트 전체 완료</span><time>10:40</time></li>
+          <li class="done"><i class="chk">✓</i><span>주간 보스 · 던전</span><time>14:20</time></li>
+          <li class="done"><i class="chk">✓</i><span>이벤트 보상 챙기기</span><time>17:05</time></li>
+          <li><i class="chk"></i><span>저녁 보고 스크린샷 발송</span><time>21:00</time></li>
+        </ul>
+        <div class="bar"><i></i></div>
+        <p class="foot">매일 이 일지를 카카오톡으로 받아보세요. (예시 화면)</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="diff">
+    <div class="wrap">
+      <p class="eyebrow">대리육성과 무엇이 다른가요</p>
+      <h2>키우는 건 육성, 지키는 건 관리</h2>
+      <div class="compare">
+        <div>
+          <span class="k">대리육성</span>
+          <h3>짧고 굵게 목표 달성</h3>
+          <p>레벨, 장비 목표를 정해두고 2교대 24시간으로 빠르게 끌어올립니다. 처음 시작하거나 따라잡을 때 맞습니다.</p>
+        </div>
+        <div class="me">
+          <span class="k">육성관리 · 이 서비스</span>
+          <h3>매일 꾸준히 계정 유지</h3>
+          <p>이미 키운 계정의 일일 숙제와 이벤트를 매일 챙겨드립니다. 놓치는 보상 없이 성장 흐름을 이어갑니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="items">
+    <div class="wrap">
+      <p class="eyebrow">관리 항목</p>
+      <h2>매일 이만큼 챙겨드립니다</h2>
+      <div class="items">
+        <div><span class="big">매일</span><h3>일일 숙제 전부</h3><p>출석, 일일 퀘스트, 반복 콘텐츠를 빠짐없이 처리합니다.</p></div>
+        <div><span class="big">매주</span><h3>주간 · 보스 콘텐츠</h3><p>주간 초기화 콘텐츠와 보스, 레이드 일정을 맞춰 진행합니다.</p></div>
+        <div><span class="big">시즌</span><h3>이벤트 놓치지 않기</h3><p>기간 한정 이벤트와 시즌 패스 보상을 기한 안에 받아둡니다.</p></div>
+        <div><span class="big">1:1</span><h3>전담 매니저 보고</h3><p>한 계정은 한 매니저가 맡고, 매일 결과를 스크린샷으로 보내드립니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="process">
+    <div class="wrap">
+      <p class="eyebrow">진행 순서</p>
+      <h2>카톡 한 번이면 관리가 시작됩니다</h2>
+      <ol class="steps">
+        <li><b>카톡 상담</b><span>게임과 현재 계정 상태, 원하는 관리 항목을 알려주세요.</span></li>
+        <li><b>관리표 작성</b><span>매일 할 일과 시간표를 정리해 보내드립니다.</span></li>
+        <li><b>결제 · 시작</b><span>확인 즉시 전담 매니저가 배정됩니다.</span></li>
+        <li><b>매일 관리 · 보고</b><span>그날 처리한 항목을 카톡으로 받아보세요.</span></li>
+        <li><b>월 연장 · 조정</b><span>다음 달 관리 항목을 바꾸거나 쉬어갈 수 있습니다.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" id="price">
+    <div class="wrap">
+      <p class="eyebrow">가격</p>
+      <h2>월 단위로 맡기세요 <span class="sample">예시 가격</span></h2>
+      <div class="prices">
+        <div class="plan">
+          <h3>라이트</h3>
+          <p class="won">99,000<small>원 / 월</small></p>
+          <ul><li>출석 · 일일 퀘스트</li><li>이벤트 보상 수령</li><li>주 2회 진행 보고</li></ul>
+        </div>
+        <div class="plan best">
+          <span class="tag">가장 많이 선택</span>
+          <h3>스탠다드</h3>
+          <p class="won">199,000<small>원 / 월</small></p>
+          <ul><li>일일 · 주간 콘텐츠 전부</li><li>시즌 · 이벤트 포함</li><li>매일 진행 보고</li></ul>
+        </div>
+        <div class="plan">
+          <h3>프리미엄</h3>
+          <p class="won">349,000<small>원 / 월</small></p>
+          <ul><li>스탠다드 전부 포함</li><li>보스 · 레이드 일정 관리</li><li>전담 매니저 1:1 상시 소통</li></ul>
+        </div>
+      </div>
+      <p class="price-note">게임과 관리 항목에 따라 금액이 달라질 수 있습니다. 정확한 금액은 카톡 상담으로 안내해드립니다.</p>
+    </div>
+  </section>
+
+  <section class="band alt" id="faq">
+    <div class="wrap">
+      <p class="eyebrow">자주 묻는 질문</p>
+      <h2>맡기기 전에 궁금한 점</h2>
+      <div class="faq">
+        <details><summary>제가 접속하는 시간과 겹치면 어떻게 하나요?</summary><p>상담 때 직접 플레이하시는 시간을 알려주시면, 그 시간을 피해서 관리 시간표를 짜드립니다.</p></details>
+        <details><summary>계정은 안전한가요?</summary><p>전담 매니저 한 명만 계정에 접속하고, 정해진 관리 항목 외에는 손대지 않습니다. 재화 사용은 미리 동의하신 범위에서만 진행합니다.</p></details>
+        <details><summary>대리육성과 같이 신청할 수 있나요?</summary><p>네. 대리육성으로 목표까지 키운 뒤 육성관리로 이어가시는 분이 많습니다. 함께 신청하시면 상담 때 안내해드립니다.</p></details>
+        <details><summary>한 달 중간에 쉬어도 되나요?</summary><p>네. 남은 기간에 맞춰 정산 기준을 상담 때 안내해드립니다.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>내일 숙제부터 맡겨보세요</h2>
+      <p>유튜브 보고 오셨다면 상담 때 말씀해주세요.</p>
+      <a class="btn btn-kakao btn-lg" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
+        <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
+        카카오톡 상담 시작하기
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">하노이 육성관리 · 상담 운영 매일 10:00–02:00 (한국 시간)</div></footer>
+
+<div class="dock">
+  <div class="wrap">
+    <p><b>지금 상담하면</b> 내일부터 매일 관리 시작</p>
+    <a class="btn btn-kakao btn-sm" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
+      <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
+      카톡 상담하기
+    </a>
+  </div>
+</div>
+
+<script>
+// 관리 일지 카드에 오늘 날짜 표시 (한국 시간)
+try{
+  const d=new Intl.DateTimeFormat("ko-KR",{month:"2-digit",day:"2-digit",weekday:"short",timeZone:"Asia/Seoul"}).formatToParts(new Date());
+  const g=t=>(d.find(p=>p.type===t)||{}).value||"";
+  document.getElementById("today").textContent=`${g("month")}.${g("day")} (${g("weekday")})`;
+}catch(e){}
+</script>
+</body>
+</html>
