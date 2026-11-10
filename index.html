@@ -3,284 +3,462 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>고밥육성관리</title>
-<meta name="description" content="매일 숙제, 이벤트, 시즌 콘텐츠까지. 베트남 전담팀이 내 계정을 매일 관리해드립니다.">
+<meta name="robots" content="noindex, nofollow">
+<title>고밥육성관리 현황판</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* 콘셉트: 매일 체크되는 관리 일지. 대리육성(한 번에 키우기)과 달리, 육성관리는 매일 꾸준히 계정을 돌봐주는 월 관리형 서비스 */
 :root{
-  --night:#0c1320;
-  --panel:#131d2e;
-  --line:#22304a;
-  --text:#e8edf5;
-  --muted:#93a0b6;
-  --sky:#4fb3ff;        /* 포인트: 관리/체크 */
-  --lantern:#ff5b3a;    /* 강조: 대리육성 사이트와 같은 등불색 */
-  --kakao:#fee500; --kakao-ink:#191600;
-  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --bg:#0c1320; --panel:#131d2e; --panel2:#18243a; --line:#24334f;
+  --text:#e8edf5; --muted:#8e9bb3;
+  --day:#ffb547; --night:#7b8cff; --ok:#3fcf8e; --warn:#ffb547; --bad:#ff5b5b;
+  --accent:#4fb3ff;
+  --f:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-body{margin:0;background:var(--night);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.65;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
-.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.2;text-wrap:balance;margin:0}
-p{margin:0}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;line-height:1.45;display:flex;flex-direction:column}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px}
-.logo{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;text-decoration:none}
-.logo span{color:var(--sky)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;font-weight:700;text-decoration:none;cursor:pointer;border:0;font-family:var(--f-body);transition:transform .15s}
-.btn:hover{transform:translateY(-1px)}
-.btn-kakao{background:var(--kakao);color:var(--kakao-ink)}
-.btn-sm{padding:9px 14px;font-size:14px}
-.btn-lg{padding:16px 26px;font-size:18px}
-.kakao-ico{width:20px;height:20px;flex:none}
+/* 상단 바 */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{font-weight:700;font-size:17px;white-space:nowrap}
+.brand span{color:var(--accent)}
+.clock{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:7px 12px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"].d{background:var(--day);color:#2a1a00}
+.seg button[aria-pressed="true"].n{background:var(--night);color:#0c0f2a}
+.seg button[aria-pressed="true"].a{background:var(--text);color:var(--bg)}
+.grow{flex:1}
+.search{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;width:170px;min-width:0}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:7px 12px;font-weight:700;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#04121f}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.sync{font-size:12px;color:var(--muted);white-space:nowrap}
+.sync.local{color:var(--warn)}
+.sync.err{color:var(--bad)}
 
-/* hero */
-.hero .wrap{padding-block:28px 48px;display:grid;gap:28px;grid-template-columns:1.2fr 1fr;align-items:center}
-@media (max-width:820px){.hero .wrap{grid-template-columns:1fr}}
-.hero-copy{display:grid;gap:20px;min-width:0}
-.hero h1{font-size:clamp(38px,7vw,76px);letter-spacing:-.01em}
-.hero h1 em{font-style:normal;color:var(--sky)}
-.hero .lede{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:34em}
-.hero .lede strong{color:var(--text)}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.cta-note{font-size:14px;color:var(--muted)}
+/* 요약 + 페이지 */
+.sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 16px}
+.pages{display:flex;flex-wrap:wrap;gap:6px}
+.pages button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:5px 10px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.pages button[aria-current="true"]{background:var(--panel2);color:var(--text);border-color:var(--accent)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.stats b{color:var(--text);font-family:var(--mono)}
+.stats .bad b{color:var(--bad)}
+.stats .warn b{color:var(--warn)}
 
-/* 오늘의 관리 일지 카드 */
-.log{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:14px;min-width:0}
-.log-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
-.log-head b{color:var(--text);font-weight:500}
-.log ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.log li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--night);border:1px solid var(--line)}
-.log li .chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:13px;font-style:normal;font-weight:700;color:var(--night)}
-.log li.done .chk{background:var(--sky);border-color:var(--sky)}
-.log li.done span{color:var(--muted);text-decoration:line-through}
-.log li time{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.log .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
-.log .bar i{display:block;height:100%;width:80%;background:var(--sky);border-radius:99px}
-.log .foot{font-size:13px;color:var(--muted)}
+/* 보드: 넓은 화면에서는 5×2 = 10칸이 한 화면에 균등하게 */
+.board{flex:1;min-height:0;display:grid;gap:10px;padding:0 16px 16px;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+@media (max-width:1300px){.board{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(380px,auto)}}
+@media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.board{grid-template-columns:1fr}.search{width:100%}.top .grow{display:none}}
 
-section.band .wrap{padding-block:56px}
-.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--sky);margin-bottom:10px}
-.band h2{font-size:clamp(28px,4.4vw,44px);margin-bottom:28px}
-.band.alt{background:var(--panel);border-block:1px solid var(--line)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.card.warn{border-color:var(--warn)}
+.card.bad{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+.card.empty{opacity:.55}
+.c-head{display:flex;align-items:center;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--panel2);cursor:pointer;text-align:left;border-top:0;border-left:0;border-right:0;width:100%}
+.c-no{font-family:var(--mono);font-weight:600;font-size:13px;background:var(--bg);border-radius:6px;padding:1px 7px;flex:none}
+.c-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.c-char{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.c-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 92px}
+.c-reqs{display:flex;flex-direction:column;min-height:0;min-width:0;border-right:1px solid var(--line)}
+.c-list{list-style:none;margin:0;padding:6px;flex:1;min-height:0;overflow:auto;display:grid;align-content:start;gap:4px}
+.req{display:flex;align-items:flex-start;gap:6px;padding:5px 6px;border-radius:8px;background:var(--bg)}
+.req input[type=checkbox]{width:17px;height:17px;margin:1px 0 0;flex:none;accent-color:var(--ok);cursor:pointer}
+.req .t{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}
+.req.done .t{color:var(--muted)}
+.req.done .tx{text-decoration:line-through}
+.req .by{display:block;font-size:11px;color:var(--muted);text-decoration:none}
+.tag{font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;flex:none;margin-top:2px}
+.tag.day{background:var(--day);color:#2a1a00}
+.tag.night{background:var(--night);color:#0c0f2a}
+.tag.all{border:1px solid var(--muted);color:var(--muted)}
+.tag.once{border:1px dashed var(--muted);color:var(--muted)}
+.req .x{border:0;background:transparent;color:var(--muted);padding:0 2px;font-size:15px;line-height:1;flex:none}
+.req .x:hover{color:var(--bad)}
+.c-none{color:var(--muted);font-size:12px;padding:6px}
+.c-add{display:flex;gap:4px;padding:6px;border-top:1px solid var(--line)}
+.c-add input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:13px}
+.c-add select{background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;padding:0 2px}
+.c-add button{border:0;background:var(--accent);color:#04121f;border-radius:7px;font-weight:700;padding:0 9px}
 
-/* 대리육성 vs 육성관리 */
-.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.compare div{padding:24px;border-radius:16px;border:1px solid var(--line);background:var(--night);display:grid;gap:10px;align-content:start;min-width:0}
-.compare div.me{border-color:var(--sky)}
-.compare .k{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.compare div.me .k{color:var(--sky)}
-.compare h3{font-size:24px}
-.compare p{color:var(--muted)}
-.compare a{color:var(--text)}
+.c-pay{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 8px;text-align:center;min-width:0}
+.dday{font-family:var(--mono);font-weight:600;font-size:22px;line-height:1.1}
+.card.warn .dday{color:var(--warn)}
+.card.bad .dday{color:var(--bad)}
+.lbl{font-size:11px;color:var(--muted)}
+.val{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.paid{border:1px solid var(--ok);background:transparent;color:var(--ok);border-radius:8px;font-size:12px;font-weight:700;padding:5px 2px;margin-top:auto}
+.c-foot{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.prog{flex:1;height:5px;background:var(--line);border-radius:9px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok)}
 
-.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
-.items div{min-width:0;display:grid;gap:8px;align-content:start}
-.items .big{font-family:var(--f-display);font-size:40px;color:var(--sky);line-height:1}
-.items h3{font-size:21px}
-.items p{color:var(--muted)}
-
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;counter-reset:s}
-.steps li{counter-increment:s;padding:20px;border:1px solid var(--line);border-radius:14px;display:grid;gap:6px;align-content:start;min-width:0}
-.steps li::before{content:"STEP " counter(s);font-family:var(--f-mono);font-size:12px;color:var(--sky)}
-.steps b{font-size:18px}
-.steps span{color:var(--muted);font-size:15px}
-
-.prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.plan{padding:24px;border-radius:16px;background:var(--night);border:1px solid var(--line);display:grid;gap:14px;align-content:start;position:relative}
-.plan.best{border-color:var(--sky)}
-.plan .tag{position:absolute;top:-12px;right:18px;background:var(--sky);color:var(--night);font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px}
-.plan h3{font-size:24px}
-.plan .won{font-family:var(--f-display);font-size:40px;line-height:1}
-.plan .won small{font-family:var(--f-body);font-size:15px;color:var(--muted)}
-.plan ul{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:4px}
-.price-note{margin-top:18px;font-size:14px;color:var(--muted)}
-.sample{display:inline-block;font-family:var(--f-mono);font-size:11px;color:var(--lantern);border:1px solid var(--lantern);border-radius:4px;padding:1px 6px;margin-left:8px;vertical-align:middle}
-
-.faq{display:grid;gap:10px;max-width:760px}
-.faq details{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.faq summary{cursor:pointer;font-weight:700}
-.faq p{margin-top:10px;color:var(--muted)}
-
-.final .wrap{padding-block:64px;text-align:center;display:grid;gap:18px;justify-items:center}
-.final h2{font-size:clamp(30px,5vw,52px)}
-.final p{color:var(--muted)}
-footer .wrap{padding-block:28px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
-
-.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(12,19,32,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.dock .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
-.dock p{font-size:14px;color:var(--muted);min-width:0}
-.dock p b{color:var(--text)}
-@media (max-width:520px){.dock p{display:none}.dock .btn{flex:1}}
+/* 모달 */
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);padding:0;width:min(440px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.m{padding:18px;display:grid;gap:12px}
+.m h2{margin:0;font-size:18px}
+.m label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.m input,.m textarea{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--text);font:inherit;width:100%}
+.m .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.m .acts .left{margin-right:auto}
+.m p{margin:0;color:var(--muted);font-size:13px}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <a class="logo" href="#top">고밥<span>육성관리</span></a>
-    <a class="btn btn-kakao btn-sm" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
-      <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
-      카톡 상담
-    </a>
+<header class="top">
+  <div class="brand">고밥<span>육성관리</span> 현황판</div>
+  <div class="clock" id="clock">--</div>
+  <div class="seg" role="group" aria-label="근무 선택">
+    <button class="d" data-shift="day">낮근무 09–21</button>
+    <button class="n" data-shift="night">밤근무 21–09</button>
+    <button class="a" data-shift="all">전체</button>
   </div>
+  <div class="grow"></div>
+  <input class="search" id="q" type="search" placeholder="이름·캐릭 검색">
+  <button class="btn primary" id="addCustomer">+ 고객 추가</button>
+  <span class="sync" id="sync">불러오는 중…</span>
 </header>
 
-<main id="top">
-  <section class="hero">
-    <div class="wrap">
-      <div class="hero-copy">
-        <h1>매일 숙제,<br>이제 <em>맡기고</em> 쉬세요</h1>
-        <p class="lede">일일 퀘스트, 출석, 이벤트, 시즌 콘텐츠까지. 하노이 전담 매니저가 <strong>매일 정해진 시간에</strong> 내 계정을 챙겨드립니다. 바쁜 날에도 계정은 멈추지 않습니다.</p>
-        <div class="cta-row">
-          <a class="btn btn-kakao btn-lg" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
-            <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
-            카카오톡으로 관리 상담
-          </a>
-          <span class="cta-note">평균 응답 10분 · 월 단위로 편하게</span>
-        </div>
-      </div>
-
-      <div class="log" aria-label="관리 일지 예시">
-        <div class="log-head"><span>오늘의 관리 일지</span><b id="today">--.-- (-)</b></div>
-        <ul>
-          <li class="done"><i class="chk">✓</i><span>출석 · 우편함 수령</span><time>09:10</time></li>
-          <li class="done"><i class="chk">✓</i><span>일일 퀘스트 전체 완료</span><time>10:40</time></li>
-          <li class="done"><i class="chk">✓</i><span>주간 보스 · 던전</span><time>14:20</time></li>
-          <li class="done"><i class="chk">✓</i><span>이벤트 보상 챙기기</span><time>17:05</time></li>
-          <li><i class="chk"></i><span>저녁 보고 스크린샷 발송</span><time>21:00</time></li>
-        </ul>
-        <div class="bar"><i></i></div>
-        <p class="foot">매일 이 일지를 카카오톡으로 받아보세요. (예시 화면)</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="band alt" id="diff">
-    <div class="wrap">
-      <p class="eyebrow">대리육성과 무엇이 다른가요</p>
-      <h2>키우는 건 육성, 지키는 건 관리</h2>
-      <div class="compare">
-        <div>
-          <span class="k">대리육성</span>
-          <h3>짧고 굵게 목표 달성</h3>
-          <p>레벨, 장비 목표를 정해두고 2교대 24시간으로 빠르게 끌어올립니다. 처음 시작하거나 따라잡을 때 맞습니다.</p>
-        </div>
-        <div class="me">
-          <span class="k">육성관리 · 이 서비스</span>
-          <h3>매일 꾸준히 계정 유지</h3>
-          <p>이미 키운 계정의 일일 숙제와 이벤트를 매일 챙겨드립니다. 놓치는 보상 없이 성장 흐름을 이어갑니다.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" id="items">
-    <div class="wrap">
-      <p class="eyebrow">관리 항목</p>
-      <h2>매일 이만큼 챙겨드립니다</h2>
-      <div class="items">
-        <div><span class="big">매일</span><h3>일일 숙제 전부</h3><p>출석, 일일 퀘스트, 반복 콘텐츠를 빠짐없이 처리합니다.</p></div>
-        <div><span class="big">매주</span><h3>주간 · 보스 콘텐츠</h3><p>주간 초기화 콘텐츠와 보스, 레이드 일정을 맞춰 진행합니다.</p></div>
-        <div><span class="big">시즌</span><h3>이벤트 놓치지 않기</h3><p>기간 한정 이벤트와 시즌 패스 보상을 기한 안에 받아둡니다.</p></div>
-        <div><span class="big">1:1</span><h3>전담 매니저 보고</h3><p>한 계정은 한 매니저가 맡고, 매일 결과를 스크린샷으로 보내드립니다.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band alt" id="process">
-    <div class="wrap">
-      <p class="eyebrow">진행 순서</p>
-      <h2>카톡 한 번이면 관리가 시작됩니다</h2>
-      <ol class="steps">
-        <li><b>카톡 상담</b><span>게임과 현재 계정 상태, 원하는 관리 항목을 알려주세요.</span></li>
-        <li><b>관리표 작성</b><span>매일 할 일과 시간표를 정리해 보내드립니다.</span></li>
-        <li><b>결제 · 시작</b><span>확인 즉시 전담 매니저가 배정됩니다.</span></li>
-        <li><b>매일 관리 · 보고</b><span>그날 처리한 항목을 카톡으로 받아보세요.</span></li>
-        <li><b>월 연장 · 조정</b><span>다음 달 관리 항목을 바꾸거나 쉬어갈 수 있습니다.</span></li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="band" id="price">
-    <div class="wrap">
-      <p class="eyebrow">가격</p>
-      <h2>월 단위로 맡기세요 <span class="sample">예시 가격</span></h2>
-      <div class="prices">
-        <div class="plan">
-          <h3>라이트</h3>
-          <p class="won">99,000<small>원 / 월</small></p>
-          <ul><li>출석 · 일일 퀘스트</li><li>이벤트 보상 수령</li><li>주 2회 진행 보고</li></ul>
-        </div>
-        <div class="plan best">
-          <span class="tag">가장 많이 선택</span>
-          <h3>스탠다드</h3>
-          <p class="won">199,000<small>원 / 월</small></p>
-          <ul><li>일일 · 주간 콘텐츠 전부</li><li>시즌 · 이벤트 포함</li><li>매일 진행 보고</li></ul>
-        </div>
-        <div class="plan">
-          <h3>프리미엄</h3>
-          <p class="won">349,000<small>원 / 월</small></p>
-          <ul><li>스탠다드 전부 포함</li><li>보스 · 레이드 일정 관리</li><li>전담 매니저 1:1 상시 소통</li></ul>
-        </div>
-      </div>
-      <p class="price-note">게임과 관리 항목에 따라 금액이 달라질 수 있습니다. 정확한 금액은 카톡 상담으로 안내해드립니다.</p>
-    </div>
-  </section>
-
-  <section class="band alt" id="faq">
-    <div class="wrap">
-      <p class="eyebrow">자주 묻는 질문</p>
-      <h2>맡기기 전에 궁금한 점</h2>
-      <div class="faq">
-        <details><summary>제가 접속하는 시간과 겹치면 어떻게 하나요?</summary><p>상담 때 직접 플레이하시는 시간을 알려주시면, 그 시간을 피해서 관리 시간표를 짜드립니다.</p></details>
-        <details><summary>계정은 안전한가요?</summary><p>전담 매니저 한 명만 계정에 접속하고, 정해진 관리 항목 외에는 손대지 않습니다. 재화 사용은 미리 동의하신 범위에서만 진행합니다.</p></details>
-        <details><summary>대리육성과 같이 신청할 수 있나요?</summary><p>네. 대리육성으로 목표까지 키운 뒤 육성관리로 이어가시는 분이 많습니다. 함께 신청하시면 상담 때 안내해드립니다.</p></details>
-        <details><summary>한 달 중간에 쉬어도 되나요?</summary><p>네. 남은 기간에 맞춰 정산 기준을 상담 때 안내해드립니다.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <section class="final">
-    <div class="wrap">
-      <h2>내일 숙제부터 맡겨보세요</h2>
-      <p>유튜브 보고 오셨다면 상담 때 말씀해주세요.</p>
-      <a class="btn btn-kakao btn-lg" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
-        <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
-        카카오톡 상담 시작하기
-      </a>
-    </div>
-  </section>
-</main>
-
-<footer><div class="wrap">고밥육성관리 · 상담 운영 매일 10:00–02:00 (한국 시간)</div></footer>
-
-<div class="dock">
-  <div class="wrap">
-    <p><b>지금 상담하면</b> 내일부터 매일 관리 시작</p>
-    <a class="btn btn-kakao btn-sm" href="https://pf.kakao.com/_yxoQxeX/chat" target="_blank" rel="noopener">
-      <svg class="kakao-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>
-      카톡 상담하기
-    </a>
-  </div>
+<div class="sub">
+  <nav class="pages" id="pages" aria-label="보드 페이지"></nav>
+  <div class="stats" id="stats"></div>
 </div>
 
+<main class="board" id="board"></main>
+
+<!-- 고객 정보 수정 -->
+<dialog id="dlg">
+  <form class="m" method="dialog" id="form">
+    <h2 id="dlgTitle">고객 정보</h2>
+    <div class="row">
+      <label>번호<input name="no" type="number" min="1" required></label>
+      <label>이름<input name="name" placeholder="고객 이름"></label>
+    </div>
+    <label>캐릭터 이름<input name="char" placeholder="게임 / 캐릭터명"></label>
+    <div class="row">
+      <label>다음 결제일<input name="payDate" type="date"></label>
+      <label>결제 금액(원)<input name="amount" type="number" min="0" step="1000"></label>
+    </div>
+    <label>메모<textarea name="memo" rows="2" placeholder="계정 특이사항 등"></textarea></label>
+    <div class="acts">
+      <button type="button" class="btn danger left" id="delCustomer">고객 삭제</button>
+      <button type="button" class="btn" id="cancel">취소</button>
+      <button type="submit" class="btn primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 비밀번호 -->
+<dialog id="pw">
+  <form class="m" method="dialog" id="pwForm">
+    <h2>현황판 비밀번호</h2>
+    <p>직원용 현황판입니다. 비밀번호를 입력해 주세요.</p>
+    <input name="pw" type="password" autocomplete="current-password" required>
+    <p class="hidden" id="pwErr" style="color:var(--bad)">비밀번호가 맞지 않습니다.</p>
+    <div class="acts"><button class="btn primary" type="submit">들어가기</button></div>
+  </form>
+</dialog>
+
 <script>
-// 관리 일지 카드에 오늘 날짜 표시 (한국 시간)
-try{
-  const d=new Intl.DateTimeFormat("ko-KR",{month:"2-digit",day:"2-digit",weekday:"short",timeZone:"Asia/Seoul"}).formatToParts(new Date());
-  const g=t=>(d.find(p=>p.type===t)||{}).value||"";
-  document.getElementById("today").textContent=`${g("month")}.${g("day")} (${g("weekday")})`;
-}catch(e){}
+"use strict";
+const PER_PAGE = 10;
+const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift";
+
+let customers = [];
+let mode = "local";       // "server" = 모든 근무자 공유, "local" = 이 기기에만 저장
+let key = "";
+let page = 0;
+let shift = "auto";
+let editingId = null;
+let dirty = new Set();    // 아직 서버에 저장 안 된 고객
+let saveTimer = null;
+
+const $ = s => document.querySelector(s);
+const ls = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+function el(tag, attrs, ...kids){
+  const n = document.createElement(tag);
+  for (const k in (attrs||{})) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : String(c));
+  return n;
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+/* ---------- 시간 (한국 시간 기준) ---------- */
+function kstParts(d = new Date()){
+  const p = new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(d);
+  const g = t => p.find(x=>x.type===t).value;
+  return { date:`${g("year")}-${g("month")}-${g("day")}`, hour:+g("hour")%24, min:+g("minute") };
+}
+// 근무일: 오전 9시에 바뀜. 밤근무(21시~다음날 9시)는 시작한 날짜로 묶임 → '매일' 요청이 9시에 초기화
+function workDay(){ return kstParts(new Date(Date.now() - 9*3600e3)).date; }
+function currentShift(){ const h = kstParts().hour; return (h >= 9 && h < 21) ? "day" : "night"; }
+function activeShift(){ return shift === "auto" ? currentShift() : shift; }
+function daysUntil(ymd){
+  if (!ymd) return null;
+  const today = kstParts().date;
+  return Math.round((Date.parse(ymd) - Date.parse(today)) / 864e5);
+}
+function addMonth(ymd){
+  const [y,m,d] = ymd.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m+1, 0)).getUTCDate();
+  const t = new Date(Date.UTC(y, m, Math.min(d, last)));
+  return t.toISOString().slice(0,10);
+}
+const won = n => n ? Number(n).toLocaleString("ko-KR") + "원" : "-";
+const shortDate = ymd => ymd ? ymd.slice(5).replace("-", ".") : "-";
+
+/* ---------- 데이터 ---------- */
+function blank(no){ return { id: uid(), no, name:"", char:"", payDate:"", amount:"", memo:"", reqs:[], updated: Date.now() }; }
+function seed(){ return Array.from({length:20}, (_,i) => blank(i+1)); }
+function sorted(){ return [...customers].sort((a,b)=>a.no-b.no); }
+function isDone(r){ return r.repeat === "daily" ? r.done === workDay() : !!r.done; }
+
+async function api(method, body, qs=""){
+  const r = await fetch("/api/board" + qs, {
+    method, headers: { "Content-Type":"application/json", "x-board-key": key },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (r.status === 401) throw Object.assign(new Error("auth"), {code:401});
+  if (r.status === 501 || r.status === 404) throw Object.assign(new Error("noserver"), {code:501});
+  if (!r.ok) throw new Error("http " + r.status);
+  return r.json();
+}
+
+function setSync(text, cls){ const s = $("#sync"); s.textContent = text; s.className = "sync " + (cls||""); }
+
+async function load(){
+  key = ls.get(LS_KEY) || "";
+  try {
+    const j = await api("GET");
+    mode = "server";
+    customers = j.customers || [];
+    if (!customers.length) { customers = seed(); await api("POST", {customers}); }
+    setSync("● 공유 저장 중");
+  } catch (e) {
+    if (e.code === 401) return askPassword(!!key);
+    mode = "local";
+    try { customers = JSON.parse(ls.get(LS_DATA) || "null") || seed(); } catch(_) { customers = seed(); }
+    setSync("● 이 기기에만 저장 중", "local");
+  }
+  render();
+}
+
+function askPassword(wrong){
+  $("#pwErr").classList.toggle("hidden", !wrong);
+  $("#pw").showModal();
+}
+$("#pwForm").addEventListener("submit", () => {
+  key = $("#pwForm").pw.value;
+  ls.set(LS_KEY, key);
+  load();
+});
+
+function touch(c){
+  c.updated = Date.now();
+  if (mode === "local") { ls.set(LS_DATA, JSON.stringify(customers)); return; }
+  dirty.add(c.id);
+  clearTimeout(saveTimer);
+  setSync("저장 중…");
+  saveTimer = setTimeout(flush, 400);
+}
+async function flush(){
+  if (!dirty.size) return;
+  const list = customers.filter(c => dirty.has(c.id));
+  dirty.clear();
+  try { await api("POST", {customers:list}); setSync("● 공유 저장 중"); }
+  catch(e){ list.forEach(c=>dirty.add(c.id)); setSync("저장 실패 · 다시 시도 중", "err"); saveTimer = setTimeout(flush, 5000); if (e.code===401) askPassword(true); }
+}
+async function removeCustomer(c){
+  customers = customers.filter(x => x.id !== c.id);
+  if (mode === "local") ls.set(LS_DATA, JSON.stringify(customers));
+  else { try { await api("DELETE", null, "?id=" + encodeURIComponent(c.id)); } catch(e){ setSync("삭제 실패", "err"); } }
+  render();
+}
+
+// 다른 근무자가 바꾼 내용을 20초마다 가져옴 (입력 중이면 건너뜀)
+setInterval(async () => {
+  if (mode !== "server" || dirty.size || document.hidden) return;
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT") || $("#dlg").open) return;
+  try { const j = await api("GET"); customers = j.customers || customers; render(); } catch(e){}
+}, 20000);
+
+/* ---------- 화면 ---------- */
+function filtered(){
+  const q = $("#q").value.trim().toLowerCase();
+  const list = sorted();
+  return q ? list.filter(c => (c.name + " " + c.char + " " + c.no).toLowerCase().includes(q)) : list;
+}
+
+function render(){
+  const s = activeShift();
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.shift === s));
+
+  const list = filtered();
+  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+  if (page >= pages) page = pages - 1;
+
+  // 페이지 버튼
+  const nav = $("#pages"); nav.replaceChildren();
+  for (let p = 0; p < pages; p++) {
+    const from = list[p*PER_PAGE], to = list[Math.min(list.length, (p+1)*PER_PAGE) - 1];
+    nav.append(el("button", { "aria-current": p === page, onclick: () => { page = p; render(); } },
+      !from ? "1–10" : from === to ? `${from.no}` : `${from.no}–${to.no}`));
+  }
+
+  // 요약
+  let todo = 0, done = 0, soon = 0, over = 0;
+  for (const c of customers) {
+    for (const r of c.reqs) if (s === "all" || r.shift === s || r.shift === "all") { isDone(r) ? done++ : todo++; }
+    const d = daysUntil(c.payDate);
+    if (d != null) { if (d < 0) over++; else if (d <= 3) soon++; }
+  }
+  $("#stats").replaceChildren(
+    el("span", null, "고객 ", el("b", null, customers.length), "명"),
+    el("span", null, (s==="day"?"낮근무":s==="night"?"밤근무":"전체")+" 요청 ", el("b", null, `${done}/${done+todo}`), " 완료"),
+    el("span", {class:"warn"}, "결제 임박(3일) ", el("b", null, soon)),
+    el("span", {class:"bad"}, "결제일 지남 ", el("b", null, over))
+  );
+
+  const board = $("#board"); board.replaceChildren();
+  list.slice(page*PER_PAGE, (page+1)*PER_PAGE).forEach(c => board.append(card(c, s)));
+}
+
+function card(c, s){
+  const d = daysUntil(c.payDate);
+  const state = d == null ? "" : d < 0 ? "bad" : d <= 3 ? "warn" : "";
+  const empty = !c.name && !c.char && !c.reqs.length;
+  const reqs = c.reqs.filter(r => s === "all" || r.shift === s || r.shift === "all");
+  const doneN = reqs.filter(isDone).length;
+
+  const ul = el("ul", { class:"c-list" });
+  if (!reqs.length) ul.append(el("li", { class:"c-none" }, c.reqs.length ? "이 근무 요청 없음" : "요청사항을 추가하세요"));
+  for (const r of reqs) {
+    const dn = isDone(r);
+    ul.append(el("li", { class: "req" + (dn ? " done" : "") },
+      el("input", { type:"checkbox", checked: dn, "aria-label": r.text + " 완료", onchange: e => {
+        if (e.target.checked) { r.done = r.repeat === "daily" ? workDay() : true; r.by = (currentShift()==="day"?"낮":"밤") + " " + kstParts().hour.toString().padStart(2,"0") + ":" + kstParts().min.toString().padStart(2,"0"); }
+        else { r.done = false; r.by = ""; }
+        touch(c); render();
+      }}),
+      el("span", { class:"t" }, el("span", { class:"tx" }, r.text), dn && r.by ? el("span", { class:"by" }, r.by + " 완료") : null),
+      r.shift !== "all" || s === "all" ? el("span", { class:"tag " + r.shift }, r.shift==="day"?"낮":r.shift==="night"?"밤":"공통") : null,
+      el("span", { class:"tag " + (r.repeat==="daily"?"all":"once") }, r.repeat==="daily"?"매일":"1회"),
+      el("button", { class:"x", title:"삭제", "aria-label": r.text + " 삭제", onclick: () => {
+        if (!confirm(`'${r.text}' 요청을 삭제할까요?`)) return;
+        c.reqs = c.reqs.filter(x => x !== r); touch(c); render();
+      }}, "×")
+    ));
+  }
+
+  const input = el("input", { placeholder:"요청 추가", "aria-label":"요청사항 입력" });
+  const selShift = el("select", { "aria-label":"근무" },
+    el("option", { value:"all" }, "공통"), el("option", { value:"day", selected: s==="day" }, "낮"), el("option", { value:"night", selected: s==="night" }, "밤"));
+  const selRep = el("select", { "aria-label":"반복" }, el("option", { value:"daily" }, "매일"), el("option", { value:"once" }, "1회"));
+  const add = () => {
+    const t = input.value.trim(); if (!t) return;
+    c.reqs.push({ id: uid(), text: t, shift: selShift.value, repeat: selRep.value, done: false, by: "" });
+    touch(c); render();
+    const again = document.querySelector(`[data-id="${c.id}"] .c-add input`); if (again) again.focus();
+  };
+  input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); add(); } });
+
+  return el("article", { class: `card ${state} ${empty ? "empty" : ""}`, "data-id": c.id },
+    el("button", { class:"c-head", type:"button", title:"고객 정보 수정", onclick: () => openEdit(c) },
+      el("span", { class:"c-no" }, c.no),
+      el("span", { class:"c-name" }, c.name || "이름 입력"),
+      el("span", { class:"c-char" }, c.char ? "· " + c.char : "")
+    ),
+    el("div", { class:"c-body" },
+      el("div", { class:"c-reqs" }, ul, el("div", { class:"c-add" }, input, selShift, selRep, el("button", { type:"button", onclick: add, "aria-label":"요청 추가" }, "+"))),
+      el("div", { class:"c-pay" },
+        el("div", null, el("div", { class:"lbl" }, "남은 결제일"), el("div", { class:"dday" }, d == null ? "-" : d === 0 ? "D-DAY" : d > 0 ? `D-${d}` : `D+${-d}`)),
+        el("div", null, el("div", { class:"lbl" }, "결제일"), el("div", { class:"val" }, shortDate(c.payDate))),
+        el("div", null, el("div", { class:"lbl" }, "결제 금액"), el("div", { class:"val" }, won(c.amount))),
+        c.payDate ? el("button", { class:"paid", type:"button", onclick: () => {
+          const next = addMonth(c.payDate);
+          if (!confirm(`${c.name || c.no + "번"} 결제 완료 처리할까요?\n다음 결제일: ${next}`)) return;
+          c.payDate = next; touch(c); render();
+        }}, "결제 완료") : null
+      )
+    ),
+    el("div", { class:"c-foot" },
+      el("div", { class:"prog" }, el("i", { style:`width:${reqs.length ? Math.round(doneN/reqs.length*100) : 0}%` })),
+      el("span", null, `${doneN}/${reqs.length}`)
+    )
+  );
+}
+
+/* ---------- 고객 추가 / 수정 ---------- */
+function openEdit(c){
+  editingId = c ? c.id : null;
+  const f = $("#form");
+  const nextNo = customers.reduce((m,x)=>Math.max(m,x.no),0) + 1;
+  $("#dlgTitle").textContent = c ? `${c.no}번 고객 정보` : "새 고객 추가";
+  f.no.value = c ? c.no : nextNo;
+  f.name.value = c ? c.name : "";
+  f.char.value = c ? c.char : "";
+  f.payDate.value = c ? c.payDate : "";
+  f.amount.value = c ? c.amount : "";
+  f.memo.value = c ? c.memo || "" : "";
+  $("#delCustomer").classList.toggle("hidden", !c);
+  $("#dlg").showModal();
+}
+$("#form").addEventListener("submit", () => {
+  const f = $("#form");
+  let c = customers.find(x => x.id === editingId);
+  if (!c) { c = blank(0); customers.push(c); }
+  c.no = Math.max(1, parseInt(f.no.value, 10) || 1);
+  c.name = f.name.value.trim(); c.char = f.char.value.trim();
+  c.payDate = f.payDate.value; c.amount = f.amount.value; c.memo = f.memo.value.trim();
+  touch(c);
+  if (!editingId) { const i = sorted().findIndex(x => x.id === c.id); page = Math.floor(i / PER_PAGE); $("#q").value = ""; }
+  render();
+});
+$("#cancel").addEventListener("click", () => $("#dlg").close());
+$("#delCustomer").addEventListener("click", () => {
+  const c = customers.find(x => x.id === editingId); if (!c) return;
+  if (!confirm(`${c.no}번 ${c.name || ""} 고객을 삭제할까요? 요청사항도 함께 지워집니다.`)) return;
+  $("#dlg").close(); removeCustomer(c);
+});
+$("#addCustomer").addEventListener("click", () => openEdit(null));
+$("#q").addEventListener("input", () => { page = 0; render(); });
+
+/* ---------- 근무 전환 ---------- */
+shift = ls.get(LS_SHIFT) || "auto";
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  shift = b.dataset.shift === currentShift() ? "auto" : b.dataset.shift;
+  ls.set(LS_SHIFT, shift); render();
+}));
+
+function tick(){
+  const k = kstParts();
+  $("#clock").textContent = `${k.date.slice(5).replace("-",".")} ${String(k.hour).padStart(2,"0")}:${String(k.min).padStart(2,"0")} · 지금 ${currentShift()==="day"?"낮근무":"밤근무"}`;
+}
+let lastDay = workDay();
+tick(); setInterval(() => { tick(); const now = workDay(); if (now !== lastDay) { lastDay = now; render(); } }, 30000);
+
+load();
 </script>
 </body>
 </html>
