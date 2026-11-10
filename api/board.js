@@ -4,7 +4,7 @@
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const PASSWORD = process.env.BOARD_PASSWORD;
-const KEYS = { board: "gobap:board", notes: "gobap:notes" };
+const KEYS = { board: "gobap:board", notes: "gobap:notes", staff: "gobap:staff" };
 
 async function redis(cmd) {
   const r = await fetch(URL_, {

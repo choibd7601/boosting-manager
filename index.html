@@ -85,7 +85,9 @@ button{cursor:pointer}
 .req .t{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}
 .req.done .t{color:var(--muted)}
 .req.done .tx{text-decoration:line-through}
-.req .by{display:block;font-size:11px;color:var(--muted);text-decoration:none}
+.req .by{font-size:11px;color:var(--muted)}
+.req .meta{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin-top:3px}
+.req .meta .tag,.req .meta .who{margin-top:0}
 .tag{font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;flex:none;margin-top:2px}
 .tag.day{background:var(--day);color:#2a1a00}
 .tag.night{background:var(--night);color:#0c0f2a}
@@ -96,7 +98,41 @@ button{cursor:pointer}
 .c-none{color:var(--muted);font-size:12px;padding:6px}
 .c-add{display:flex;gap:4px;padding:6px;border-top:1px solid var(--line)}
 .c-add input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:13px}
-.c-add select{background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;padding:0 2px}
+.c-add select{background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;padding:3px 2px;min-width:0;flex:1}
+.c-add{flex-wrap:wrap}
+.c-add input{flex:1 1 60%}
+.c-add .opts{display:flex;gap:4px;flex:1 1 100%;min-width:0}
+.who{font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;flex:none;margin-top:2px;background:var(--panel2);border:1px solid var(--accent);color:var(--accent);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who.gone{border-color:var(--muted);color:var(--muted)}
+.card.flash{box-shadow:0 0 0 3px var(--accent)}
+/* 직원 관리 */
+.staff-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:50vh;overflow:auto}
+.staff-list li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.staff-list .nm{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.staff-list select{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:3px}
+.staff-list .cnt{font-size:12px;color:var(--muted);white-space:nowrap}
+.staff-list button{border:0;background:transparent;color:var(--muted);font-size:16px}
+.staff-add{display:flex;gap:6px}
+.staff-add input{flex:1;min-width:0}
+.staff-add select{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:0 6px}
+/* 내 요청 페이지 */
+.mypage{flex:1;min-height:0;overflow:auto;padding:0 16px 24px}
+.mp-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:6px 0 14px}
+.mp-head h2{margin:0;font-size:22px}
+.mp-head p{margin:0;color:var(--muted)}
+.mp-sec{margin:0 0 18px}
+.mp-sec h3{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:700}
+.mp-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:900px}
+.mp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.mp-item input{width:20px;height:20px;flex:none;accent-color:var(--ok);cursor:pointer}
+.mp-item .t{flex:1;min-width:0;display:grid;gap:2px}
+.mp-item .t b{font-weight:700;overflow-wrap:anywhere}
+.mp-item.done .t b{color:var(--muted);text-decoration:line-through}
+.mp-item .cust{font-size:12px;color:var(--muted)}
+.mp-item .go{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:12px;color:var(--muted);white-space:nowrap}
+.mp-item .bad{color:var(--bad)}
+.mp-empty{color:var(--muted);padding:6px 0}
+.top select.pick{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font-weight:700;max-width:170px}
 .c-add button{border:0;background:var(--accent);color:#04121f;border-radius:7px;font-weight:700;padding:0 9px}
 
 .c-pay{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 8px;text-align:center;min-width:0}
@@ -187,6 +223,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </div>
   <div class="grow"></div>
   <input class="search" id="q" type="search" placeholder="이름·캐릭 검색">
+  <select class="pick" id="pageSel" aria-label="화면 선택"></select>
+  <button class="btn" id="openStaff">직원 관리</button>
   <button class="btn" id="openNotes">게시판<span class="badge" id="badge"></span></button>
   <button class="btn primary" id="addCustomer">+ 고객 추가</button>
   <span class="sync" id="sync">불러오는 중…</span>
@@ -212,6 +250,22 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </div>
 
 <main class="board" id="board"></main>
+<main class="mypage hidden" id="mypage"></main>
+
+<!-- 직원 관리 -->
+<dialog id="staffDlg">
+  <div class="m">
+    <h2>직원 관리</h2>
+    <p>여기 등록한 직원을 요청사항의 담당자로 지정할 수 있어요. 각자 위쪽 메뉴에서 자기 이름을 고르면 내 요청만 모아 봅니다.</p>
+    <ul class="staff-list" id="staffList"></ul>
+    <form class="staff-add" id="staffAdd">
+      <input id="staffName" placeholder="직원 이름" maxlength="20" required>
+      <select id="staffShift" aria-label="근무조"><option value="day">낮근무</option><option value="night">밤근무</option><option value="all">낮·밤</option></select>
+      <button class="btn primary" type="submit">추가</button>
+    </form>
+    <div class="acts"><button class="btn" type="button" id="staffClose">닫기</button></div>
+  </div>
+</dialog>
 
 <!-- 근무자 게시판 -->
 <aside class="drawer hidden" id="drawer" aria-label="근무자 게시판">
@@ -268,7 +322,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 "use strict";
-const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift", LS_VIEW = "gobap-view", LS_NOTES = "gobap-notes-v1";
+const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift", LS_VIEW = "gobap-view", LS_NOTES = "gobap-notes-v1", LS_STAFF = "gobap-staff-v1";
+let staff = [];          // { id, name, shift }
+let viewStaff = "";      // 비어 있으면 전체 보드, 직원 id면 그 사람의 내 요청 페이지
 // 한 화면 고객 수 → 가로 × 세로 칸
 const LAYOUTS = { 4:[2,2], 6:[3,2], 8:[4,2], 10:[5,2], 12:[4,3], 15:[5,3], 20:[5,4] };
 let view = { per:10, mode:"page", auto:false, sec:20 };
@@ -357,6 +413,7 @@ async function load(){
     mode = "server";
     customers = j.customers || [];
     try { notes = (await api("GET", null, "", "notes")).items || []; } catch(_) {}
+    try { staff = (await api("GET", null, "", "staff")).items || []; } catch(_) {}
     if (!customers.length) { customers = seed(); await api("POST", {customers}); }
     setSync("● 공유 저장 중");
   } catch (e) {
@@ -364,6 +421,7 @@ async function load(){
     mode = "local";
     try { customers = JSON.parse(ls.get(LS_DATA) || "null") || seed(); } catch(_) { customers = seed(); }
     try { notes = JSON.parse(ls.get(LS_NOTES) || "[]"); } catch(_) { notes = []; }
+    try { staff = JSON.parse(ls.get(LS_STAFF) || "[]"); } catch(_) { staff = []; }
     setSync("● 이 기기에만 저장 중" + (e.missing && e.missing.length ? " · 버셀 설정 필요: " + e.missing.join(", ") : ""), "local");
   }
   render(); renderNotes();
@@ -409,6 +467,7 @@ setInterval(async () => {
   try {
     const j = await api("GET"); customers = j.customers || customers;
     const n = await api("GET", null, "", "notes"); notes = n.items || notes;
+    const st = await api("GET", null, "", "staff"); staff = st.items || staff;
     render(); renderNotes();
   } catch(e){}
 }, 20000);
@@ -422,6 +481,12 @@ function filtered(){
 
 function render(){
   const s = activeShift();
+  renderPicker();
+  const mine = viewStaff && staff.find(x => x.id === viewStaff);
+  $("#board").classList.toggle("hidden", !!mine);
+  $("#mypage").classList.toggle("hidden", !mine);
+  document.querySelector(".sub").classList.toggle("hidden", !!mine);
+  if (mine) { document.querySelectorAll("[data-shift]").forEach(b => b.setAttribute("aria-pressed", b.dataset.shift === s)); return renderMine(mine, s); }
   document.querySelectorAll("[data-shift]").forEach(b => b.setAttribute("aria-pressed", b.dataset.shift === s));
 
   const list = filtered();
@@ -477,14 +542,13 @@ function card(c, s){
   for (const r of reqs) {
     const dn = isDone(r);
     ul.append(el("li", { class: "req" + (dn ? " done" : "") },
-      el("input", { type:"checkbox", checked: dn, "aria-label": r.text + " 완료", onchange: e => {
-        if (e.target.checked) { r.done = r.repeat === "daily" ? workDay() : true; r.by = (currentShift()==="day"?"낮":"밤") + " " + kstParts().hour.toString().padStart(2,"0") + ":" + kstParts().min.toString().padStart(2,"0"); }
-        else { r.done = false; r.by = ""; }
-        touch(c); render();
-      }}),
-      el("span", { class:"t" }, el("span", { class:"tx" }, r.text), dn && r.by ? el("span", { class:"by" }, r.by + " 완료") : null),
-      r.shift !== "all" || s === "all" ? el("span", { class:"tag " + r.shift }, r.shift==="day"?"낮":r.shift==="night"?"밤":"공통") : null,
-      el("span", { class:"tag " + (r.repeat==="daily"?"all":"once") }, r.repeat==="daily"?"매일":"1회"),
+      el("input", { type:"checkbox", checked: dn, "aria-label": r.text + " 완료", onchange: e => setDone(c, r, e.target.checked) }),
+      el("span", { class:"t" }, el("span", { class:"tx" }, r.text),
+        el("span", { class:"meta" },
+          r.assignee ? whoTag(r.assignee) : null,
+          r.shift !== "all" || s === "all" ? el("span", { class:"tag " + r.shift }, r.shift==="day"?"낮":r.shift==="night"?"밤":"공통") : null,
+          el("span", { class:"tag " + (r.repeat==="daily"?"all":"once") }, r.repeat==="daily"?"매일":"1회"),
+          dn && r.by ? el("span", { class:"by" }, r.by + " 완료") : null)),
       el("button", { class:"x", title:"삭제", "aria-label": r.text + " 삭제", onclick: () => {
         if (!confirm(`'${r.text}' 요청을 삭제할까요?`)) return;
         c.reqs = c.reqs.filter(x => x !== r); touch(c); render();
@@ -496,9 +560,11 @@ function card(c, s){
   const selShift = el("select", { "aria-label":"근무" },
     el("option", { value:"all" }, "공통"), el("option", { value:"day", selected: s==="day" }, "낮"), el("option", { value:"night", selected: s==="night" }, "밤"));
   const selRep = el("select", { "aria-label":"반복" }, el("option", { value:"daily" }, "매일"), el("option", { value:"once" }, "1회"));
+  const selWho = el("select", { "aria-label":"담당자" }, el("option", { value:"" }, "담당자"),
+    staff.map(m => el("option", { value:m.id }, m.name)));
   const add = () => {
     const t = input.value.trim(); if (!t) return;
-    c.reqs.push({ id: uid(), text: t, shift: selShift.value, repeat: selRep.value, done: false, by: "" });
+    c.reqs.push({ id: uid(), text: t, shift: selShift.value, repeat: selRep.value, assignee: selWho.value, done: false, by: "" });
     touch(c); render();
     const again = document.querySelector(`[data-id="${c.id}"] .c-add input`); if (again) again.focus();
   };
@@ -511,7 +577,7 @@ function card(c, s){
       el("span", { class:"c-char" }, c.char ? "· " + c.char : "")
     ),
     el("div", { class:"c-body" },
-      el("div", { class:"c-reqs" }, ul, el("div", { class:"c-add" }, input, selShift, selRep, el("button", { type:"button", onclick: add, "aria-label":"요청 추가" }, "+"))),
+      el("div", { class:"c-reqs" }, ul, el("div", { class:"c-add" }, input, el("button", { type:"button", onclick: add, "aria-label":"요청 추가" }, "+"), el("div", { class:"opts" }, selShift, selRep, selWho))),
       el("div", { class:"c-pay" },
         el("div", null, el("div", { class:"lbl" }, "남은 결제일"), el("div", { class:"dday" }, d == null ? "-" : d === 0 ? "D-DAY" : d > 0 ? `D-${d}` : `D+${-d}`)),
         el("div", null, el("div", { class:"lbl" }, "결제일"), el("div", { class:"val" }, shortDate(c.payDate))),
@@ -740,6 +806,123 @@ $("#compose").addEventListener("submit", async e => {
   pending = []; renderPending();
   renderNotes();
 });
+
+/* ---------- 완료 체크 (보드·내 요청 공통) ---------- */
+function setDone(c, r, on){
+  if (on) {
+    const k = kstParts();
+    const who = me() || (currentShift() === "day" ? "낮" : "밤");
+    r.done = r.repeat === "daily" ? workDay() : true;
+    r.by = `${who} ${String(k.hour).padStart(2,"0")}:${String(k.min).padStart(2,"0")}`;
+  } else { r.done = false; r.by = ""; }
+  touch(c); render();
+}
+
+/* ---------- 직원 ---------- */
+const staffName = id => (staff.find(m => m.id === id) || {}).name;
+function whoTag(id){
+  const n = staffName(id);
+  return el("span", { class: "who" + (n ? "" : " gone"), title: n ? "담당: " + n : "삭제된 직원" }, n || "담당 없음");
+}
+function saveStaff(m){
+  if (mode === "local") { ls.set(LS_STAFF, JSON.stringify(staff)); return; }
+  api("POST", { items:[m] }, "", "staff").catch(() => setSync("직원 저장 실패", "err"));
+}
+function myOpenCount(id, s){
+  let n = 0;
+  for (const c of customers) for (const r of c.reqs)
+    if (r.assignee === id && (s === "all" || r.shift === s || r.shift === "all") && !isDone(r)) n++;
+  return n;
+}
+function renderPicker(){
+  const sel = $("#pageSel"), s = activeShift();
+  sel.replaceChildren(el("option", { value:"" }, "전체 보드"),
+    ...staff.slice().sort((a,b) => a.name.localeCompare(b.name, "ko")).map(m => {
+      const n = myOpenCount(m.id, s);
+      return el("option", { value:m.id }, `${m.name}의 요청${n ? ` (${n})` : ""}`);
+    }));
+  sel.value = staff.some(m => m.id === viewStaff) ? viewStaff : "";
+}
+$("#pageSel").addEventListener("change", e => {
+  viewStaff = e.target.value;
+  history.replaceState(null, "", viewStaff ? "#staff=" + viewStaff : location.pathname + location.search);
+  const m = staff.find(x => x.id === viewStaff);
+  if (m && !me()) { $("#me").value = m.name; ls.set(LS_ME, m.name); }
+  render();
+});
+{ const h = location.hash.match(/staff=([\w-]+)/); if (h) viewStaff = h[1]; }
+
+function renderStaffList(){
+  const ul = $("#staffList"); ul.replaceChildren();
+  if (!staff.length) ul.append(el("li", null, el("span", { class:"cnt" }, "아직 등록된 직원이 없어요.")));
+  for (const m of staff.slice().sort((a,b) => a.name.localeCompare(b.name, "ko"))) {
+    const sel = el("select", { "aria-label": m.name + " 근무조", onchange: e => { m.shift = e.target.value; saveStaff(m); render(); } },
+      el("option", { value:"day", selected: m.shift === "day" }, "낮근무"),
+      el("option", { value:"night", selected: m.shift === "night" }, "밤근무"),
+      el("option", { value:"all", selected: m.shift === "all" }, "낮·밤"));
+    ul.append(el("li", null,
+      el("span", { class:"nm" }, m.name), sel,
+      el("span", { class:"cnt" }, `남은 요청 ${myOpenCount(m.id, "all")}`),
+      el("button", { type:"button", title:"삭제", "aria-label": m.name + " 삭제", onclick: () => removeStaff(m) }, "×")));
+  }
+}
+function removeStaff(m){
+  const owned = customers.filter(c => c.reqs.some(r => r.assignee === m.id));
+  if (!confirm(`${m.name} 직원을 삭제할까요?` + (owned.length ? `\n맡고 있던 요청은 '담당 없음'으로 바뀝니다.` : ""))) return;
+  for (const c of owned) { c.reqs.forEach(r => { if (r.assignee === m.id) r.assignee = ""; }); touch(c); }
+  staff = staff.filter(x => x.id !== m.id);
+  if (mode === "local") ls.set(LS_STAFF, JSON.stringify(staff));
+  else api("DELETE", null, "id=" + encodeURIComponent(m.id), "staff").catch(() => setSync("삭제 실패", "err"));
+  if (viewStaff === m.id) viewStaff = "";
+  renderStaffList(); render();
+}
+$("#openStaff").addEventListener("click", () => { renderStaffList(); $("#staffDlg").showModal(); $("#staffName").focus(); });
+$("#staffClose").addEventListener("click", () => $("#staffDlg").close());
+$("#staffAdd").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("#staffName").value.trim(); if (!name) return;
+  if (staff.some(m => m.name === name)) { alert("같은 이름의 직원이 이미 있어요."); return; }
+  const m = { id: uid(), name, shift: $("#staffShift").value };
+  staff.push(m); saveStaff(m);
+  $("#staffName").value = ""; renderStaffList(); render();
+});
+
+/* ---------- 내 요청 페이지 ---------- */
+function renderMine(m, s){
+  const items = [];
+  for (const c of sorted()) for (const r of c.reqs)
+    if (r.assignee === m.id && (s === "all" || r.shift === s || r.shift === "all")) items.push({ c, r, dn: isDone(r) });
+  const todo = items.filter(x => !x.dn), done = items.filter(x => x.dn);
+  const shiftTxt = s === "day" ? "낮근무" : s === "night" ? "밤근무" : "전체 근무";
+  const row = ({ c, r, dn }) => {
+    const d = daysUntil(c.payDate);
+    return el("li", { class: "mp-item" + (dn ? " done" : "") },
+      el("input", { type:"checkbox", checked: dn, "aria-label": r.text + " 완료", onchange: e => setDone(c, r, e.target.checked) }),
+      el("div", { class:"t" },
+        el("b", null, r.text),
+        el("span", { class:"cust" }, `${c.no}번 ${c.name || "이름 없음"}${c.char ? " · " + c.char : ""}`,
+          d != null && d < 0 ? el("span", { class:"bad" }, ` · 결제일 ${-d}일 지남`) : null,
+          dn && r.by ? ` · ${r.by} 완료` : "")),
+      el("span", { class:"tag " + r.shift }, r.shift === "day" ? "낮" : r.shift === "night" ? "밤" : "공통"),
+      el("span", { class:"tag " + (r.repeat === "daily" ? "all" : "once") }, r.repeat === "daily" ? "매일" : "1회"),
+      el("button", { class:"go", type:"button", onclick: () => goToCustomer(c) }, "카드 보기"));
+  };
+  $("#mypage").replaceChildren(
+    el("div", { class:"mp-head" },
+      el("h2", null, `${m.name}님 담당 요청`),
+      el("p", null, `${shiftTxt} · 남은 ${todo.length}건 · 완료 ${done.length}건`)),
+    el("section", { class:"mp-sec" }, el("h3", null, `할 일 ${todo.length}`),
+      todo.length ? el("ul", { class:"mp-list" }, todo.map(row)) : el("p", { class:"mp-empty" }, items.length ? "모두 끝냈어요." : "이 근무에 맡은 요청이 없어요.")),
+    done.length ? el("section", { class:"mp-sec" }, el("h3", null, `완료 ${done.length}`), el("ul", { class:"mp-list" }, done.map(row))) : null);
+}
+function goToCustomer(c){
+  viewStaff = ""; history.replaceState(null, "", location.pathname + location.search);
+  $("#q").value = "";
+  if (view.mode === "page") page = Math.floor(sorted().findIndex(x => x.id === c.id) / view.per);
+  render();
+  const elc = document.querySelector(`[data-id="${c.id}"]`);
+  if (elc) { elc.scrollIntoView({ block:"nearest" }); elc.classList.add("flash"); setTimeout(() => elc.classList.remove("flash"), 1600); }
+}
 
 load();
 </script>
