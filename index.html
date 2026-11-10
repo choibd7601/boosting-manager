@@ -122,6 +122,42 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 .m .acts .left{margin-right:auto}
 .m p{margin:0;color:var(--muted);font-size:13px}
 .hidden{display:none!important}
+
+/* 게시판 */
+.badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;line-height:18px;text-align:center;margin-left:4px}
+.badge:empty{display:none}
+.pinbar{display:flex;align-items:center;gap:10px;margin:8px 16px 0;padding:8px 12px;border-radius:10px;background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.45);cursor:pointer;text-align:left;width:calc(100% - 32px)}
+.pinbar b{color:var(--bad);flex:none;font-size:12px}
+.pinbar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pinbar small{color:var(--muted);flex:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:30;width:min(440px,100vw);background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-20px 0 40px rgba(0,0,0,.4)}
+.d-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.d-head h2{margin:0;font-size:17px;flex:1}
+.d-close{border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted)}
+.d-me{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+.d-me input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.compose{display:grid;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.compose textarea{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;resize:vertical;min-height:64px}
+.compose .row2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.compose .row2 label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.compose .row2 .btn{margin-left:auto}
+.d-tabs{display:flex;gap:6px;padding:10px 14px 0}
+.d-tabs button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 10px;font-size:13px;color:var(--muted)}
+.d-tabs button[aria-pressed="true"]{color:var(--text);border-color:var(--accent);background:var(--panel2)}
+.notes{list-style:none;margin:0;padding:10px 14px 20px;overflow:auto;flex:1;display:grid;align-content:start;gap:10px}
+.note{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:6px}
+.note.pinned{border-color:rgba(255,91,91,.6)}
+.note.new{box-shadow:0 0 0 1px var(--accent) inset}
+.n-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.n-type{font-weight:700;font-size:11px;border-radius:4px;padding:0 5px}
+.n-type.notice{background:var(--bad);color:#fff}
+.n-type.handover{background:var(--accent);color:#04121f}
+.n-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.n-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.n-acts button{border:1px solid var(--line);background:transparent;border-radius:7px;padding:2px 8px;font-size:12px;color:var(--muted)}
+.n-acts button.on{border-color:var(--ok);color:var(--ok)}
+.n-acts .reads{flex:1;min-width:0}
+.n-empty{color:var(--muted);font-size:13px;padding:6px 0}
 </style>
 </head>
 <body>
@@ -136,9 +172,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </div>
   <div class="grow"></div>
   <input class="search" id="q" type="search" placeholder="이름·캐릭 검색">
+  <button class="btn" id="openNotes">게시판<span class="badge" id="badge"></span></button>
   <button class="btn primary" id="addCustomer">+ 고객 추가</button>
   <span class="sync" id="sync">불러오는 중…</span>
 </header>
+
+<button class="pinbar hidden" id="pinbar" type="button"></button>
 
 <div class="sub">
   <nav class="pages" id="pages" aria-label="보드 페이지"></nav>
@@ -158,6 +197,24 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </div>
 
 <main class="board" id="board"></main>
+
+<!-- 근무자 게시판 -->
+<aside class="drawer hidden" id="drawer" aria-label="근무자 게시판">
+  <div class="d-head"><h2>근무자 게시판</h2><button class="d-close" id="closeNotes" aria-label="닫기">×</button></div>
+  <label class="d-me">내 이름 <input id="me" placeholder="글쓴이·확인자로 표시돼요" maxlength="20"></label>
+  <form class="compose" id="compose">
+    <textarea id="noteText" placeholder="다음 근무자에게 전달할 내용이나 공지를 적어주세요" maxlength="1000"></textarea>
+    <div class="row2">
+      <select id="noteType" aria-label="글 종류"><option value="handover">전달사항</option><option value="notice">공지</option></select>
+      <label><input type="checkbox" id="notePin"> 위에 고정</label>
+      <button class="btn primary" type="submit">등록</button>
+    </div>
+  </form>
+  <div class="d-tabs" role="group" aria-label="글 종류 보기">
+    <button data-tab="all">전체</button><button data-tab="notice">공지</button><button data-tab="handover">전달사항</button>
+  </div>
+  <ul class="notes" id="notes"></ul>
+</aside>
 
 <!-- 고객 정보 수정 -->
 <dialog id="dlg">
@@ -194,7 +251,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 "use strict";
-const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift", LS_VIEW = "gobap-view";
+const LS_DATA = "gobap-board-v1", LS_KEY = "gobap-board-key", LS_SHIFT = "gobap-shift", LS_VIEW = "gobap-view", LS_NOTES = "gobap-notes-v1";
 // 한 화면 고객 수 → 가로 × 세로 칸
 const LAYOUTS = { 4:[2,2], 6:[3,2], 8:[4,2], 10:[5,2], 12:[4,3], 15:[5,3], 20:[5,4] };
 let view = { per:10, mode:"page", auto:false, sec:20 };
@@ -260,8 +317,8 @@ function seed(){ return Array.from({length:20}, (_,i) => blank(i+1)); }
 function sorted(){ return [...customers].sort((a,b)=>a.no-b.no); }
 function isDone(r){ return r.repeat === "daily" ? r.done === workDay() : !!r.done; }
 
-async function api(method, body, qs=""){
-  const r = await fetch("/api/board" + qs, {
+async function api(method, body, qs="", kind="board"){
+  const r = await fetch("/api/board?kind=" + kind + (qs ? "&" + qs.replace(/^\?/, "") : ""), {
     method, headers: { "Content-Type":"application/json", "x-board-key": key },
     body: body ? JSON.stringify(body) : undefined
   });
@@ -279,15 +336,17 @@ async function load(){
     const j = await api("GET");
     mode = "server";
     customers = j.customers || [];
+    try { notes = (await api("GET", null, "", "notes")).items || []; } catch(_) {}
     if (!customers.length) { customers = seed(); await api("POST", {customers}); }
     setSync("● 공유 저장 중");
   } catch (e) {
     if (e.code === 401) return askPassword(!!key);
     mode = "local";
     try { customers = JSON.parse(ls.get(LS_DATA) || "null") || seed(); } catch(_) { customers = seed(); }
+    try { notes = JSON.parse(ls.get(LS_NOTES) || "[]"); } catch(_) { notes = []; }
     setSync("● 이 기기에만 저장 중", "local");
   }
-  render();
+  render(); renderNotes();
 }
 
 function askPassword(wrong){
@@ -327,7 +386,11 @@ setInterval(async () => {
   if (mode !== "server" || dirty.size || document.hidden) return;
   const a = document.activeElement;
   if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT") || $("#dlg").open) return;
-  try { const j = await api("GET"); customers = j.customers || customers; render(); } catch(e){}
+  try {
+    const j = await api("GET"); customers = j.customers || customers;
+    const n = await api("GET", null, "", "notes"); notes = n.items || notes;
+    render(); renderNotes();
+  } catch(e){}
 }, 20000);
 
 /* ---------- 화면 ---------- */
@@ -521,6 +584,91 @@ $("#auto").addEventListener("change", e => { view.auto = e.target.checked; saveV
 $("#autoSec").addEventListener("change", e => { view.sec = +e.target.value; saveView(); setAuto(); });
 document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", setAuto));
 setAuto();
+
+/* ---------- 근무자 게시판 ---------- */
+let notes = [];
+let tab = "all";
+const LS_ME = "gobap-me", LS_SEEN = "gobap-notes-seen";
+let seen = +(ls.get(LS_SEEN) || 0);
+let seenAtOpen = seen;
+$("#me").value = ls.get(LS_ME) || "";
+$("#me").addEventListener("input", e => ls.set(LS_ME, e.target.value.trim()));
+const me = () => $("#me").value.trim();
+const fmt = t => { const k = kstParts(new Date(t)); return `${k.date.slice(5).replace("-",".")} ${String(k.hour).padStart(2,"0")}:${String(k.min).padStart(2,"0")}`; };
+
+async function saveNote(n){
+  if (mode === "local") { ls.set(LS_NOTES, JSON.stringify(notes)); return; }
+  try { await api("POST", { items:[n] }, "", "notes"); } catch(e){ setSync("게시판 저장 실패", "err"); }
+}
+async function deleteNote(n){
+  notes = notes.filter(x => x.id !== n.id);
+  if (mode === "local") ls.set(LS_NOTES, JSON.stringify(notes));
+  else { try { await api("DELETE", null, "id=" + encodeURIComponent(n.id), "notes"); } catch(e){ setSync("삭제 실패", "err"); } }
+  renderNotes();
+}
+
+function renderNotes(){
+  const open = !$("#drawer").classList.contains("hidden");
+  const unread = notes.filter(n => n.at > seen && n.author !== me()).length;
+  $("#badge").textContent = open || !unread ? "" : unread;
+
+  const pinned = notes.filter(n => n.pinned).sort((a,b) => b.at - a.at);
+  const bar = $("#pinbar");
+  bar.classList.toggle("hidden", !pinned.length);
+  if (pinned.length) bar.replaceChildren(el("b", null, "고정"), el("span", null, pinned[0].text.split("\n")[0]),
+    el("small", null, pinned.length > 1 ? `외 ${pinned.length-1}건` : `${pinned[0].author || ""} · ${fmt(pinned[0].at)}`));
+
+  document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab));
+  const list = notes.filter(n => tab === "all" || n.type === tab)
+    .sort((a,b) => (b.pinned - a.pinned) || (b.at - a.at));
+  const ul = $("#notes"); ul.replaceChildren();
+  if (!list.length) ul.append(el("li", { class:"n-empty" }, "아직 글이 없습니다."));
+  for (const n of list) {
+    const reads = n.reads || [];
+    const iRead = me() && reads.includes(me());
+    ul.append(el("li", { class: "note" + (n.pinned ? " pinned" : "") + (n.at > seenAtOpen && n.author !== me() ? " new" : "") },
+      el("div", { class:"n-meta" },
+        el("span", { class:"n-type " + n.type }, n.type === "notice" ? "공지" : "전달"),
+        n.shift ? el("span", { class:"tag " + n.shift }, n.shift === "day" ? "낮" : "밤") : null,
+        el("span", null, `${n.author || "이름 없음"} · ${fmt(n.at)}`),
+        n.pinned ? el("span", { style:"color:var(--bad)" }, "· 고정") : null),
+      el("div", { class:"n-text" }, n.text),
+      el("div", { class:"n-acts" },
+        el("span", { class:"reads" }, reads.length ? "확인: " + reads.join(", ") : "아직 확인한 사람 없음"),
+        el("button", { class: iRead ? "on" : "", type:"button", onclick: () => {
+          if (!me()) { alert("위에 내 이름을 먼저 적어주세요."); $("#me").focus(); return; }
+          n.reads = iRead ? reads.filter(x => x !== me()) : [...reads, me()];
+          saveNote(n); renderNotes();
+        }}, iRead ? "확인함 ✓" : "확인했어요"),
+        el("button", { type:"button", onclick: () => { n.pinned = !n.pinned; saveNote(n); renderNotes(); } }, n.pinned ? "고정 해제" : "고정"),
+        el("button", { type:"button", onclick: () => { if (confirm("이 글을 삭제할까요?")) deleteNote(n); } }, "삭제"))
+    ));
+  }
+}
+
+function openNotes(){
+  seenAtOpen = seen;
+  $("#drawer").classList.remove("hidden");
+  seen = Date.now(); ls.set(LS_SEEN, String(seen));
+  renderNotes();
+  if (!me()) $("#me").focus();
+}
+function closeNotes(){ $("#drawer").classList.add("hidden"); seenAtOpen = seen; renderNotes(); }
+$("#openNotes").addEventListener("click", () => $("#drawer").classList.contains("hidden") ? openNotes() : closeNotes());
+$("#pinbar").addEventListener("click", openNotes);
+$("#closeNotes").addEventListener("click", closeNotes);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#drawer").classList.contains("hidden") && !$("#dlg").open) closeNotes(); });
+document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; renderNotes(); }));
+$("#compose").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = $("#noteText").value.trim(); if (!text) return;
+  if (!me()) { alert("위에 내 이름을 먼저 적어주세요."); $("#me").focus(); return; }
+  const n = { id: uid(), type: $("#noteType").value, text, author: me(), shift: currentShift(), at: Date.now(), pinned: $("#notePin").checked, reads: [me()] };
+  notes.push(n); saveNote(n);
+  seen = Math.max(seen, n.at); ls.set(LS_SEEN, String(seen));
+  $("#noteText").value = ""; $("#notePin").checked = false;
+  renderNotes();
+});
 
 load();
 </script>

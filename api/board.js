@@ -4,7 +4,7 @@
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const PASSWORD = process.env.BOARD_PASSWORD;
-const KEY = "gobap:board";
+const KEYS = { board: "gobap:board", notes: "gobap:notes" };
 
 async function redis(cmd) {
   const r = await fetch(URL_, {
@@ -33,6 +33,8 @@ module.exports = async (req, res) => {
   if (req.headers["x-board-key"] !== PASSWORD) {
     return res.status(401).json({ error: "wrong_password" });
   }
+  const KEY = KEYS[(req.query && req.query.kind) || "board"];
+  if (!KEY) return res.status(400).json({ error: "kind" });
   try {
     if (req.method === "GET") {
       const flat = (await redis(["HGETALL", KEY])) || [];
@@ -40,11 +42,11 @@ module.exports = async (req, res) => {
       for (let i = 1; i < flat.length; i += 2) {
         try { customers.push(JSON.parse(flat[i])); } catch (e) {}
       }
-      return res.status(200).json({ customers });
+      return res.status(200).json({ customers, items: customers });
     }
     if (req.method === "POST") {
       const body = await readBody(req);
-      const list = body.customers || (body.customer ? [body.customer] : []);
+      const list = body.items || body.customers || (body.customer ? [body.customer] : []);
       if (!list.length) return res.status(400).json({ error: "empty" });
       const cmd = ["HSET", KEY];
       for (const c of list) {
